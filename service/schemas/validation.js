@@ -11,7 +11,7 @@ const userLoginValidationSchema = Joi.object({
   password: Joi.string().min(6).required(),
 });
 
-const transactionAddValidationSchema = Joi.object({
+const transactionValidationSchema = Joi.object({
   type: Joi.string().valid("Income", "Expense").required(),
   category: Joi.string()
     .valid(
@@ -36,5 +36,5 @@ const transactionAddValidationSchema = Joi.object({
 module.exports = {
   userSignupValidationSchema,
   userLoginValidationSchema,
-  transactionAddValidationSchema,
+  transactionValidationSchema,
 };
