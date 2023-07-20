@@ -1,21 +1,15 @@
-const Joi = require("joi");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../service/schemas/user");
+const { uuid } = require("uuidv4");
+const {
+  userSignupValidationSchema,
+  userLoginValidationSchema,
+  transactionAddValidationSchema,
+} = require("../service/schemas/validation");
 
 require("dotenv").config();
 const secret = process.env.SECRET;
-
-const userSignupValidationSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
-  firstName: Joi.string().min(3).required(),
-});
-
-const userLoginValidationSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().min(6).required(),
-});
 
 const register = async (req, res) => {
   const { email, password, firstName } = req.body;
@@ -104,6 +98,8 @@ const login = async (req, res) => {
         user: {
           email: user.email,
           firstName: user.firstName,
+          balance: user.balance,
+          transactions: user.transactions,
         },
       },
     });
@@ -135,13 +131,98 @@ const current = async (req, res) => {
     data: {
       email: user.email,
       firstName: user.firstName,
+      balance: user.balance,
+      transactions: user.transactions,
     },
   });
 };
 
+const addTransaction = async (req, res) => {
+  const user = req.user;
+  const newTransaction = req.body;
+  try {
+    const { error } = await transactionAddValidationSchema.validate(
+      newTransaction
+    );
+    if (error) {
+      res.status(400).json({
+        status: "Bad Request",
+        code: 400,
+        message: error.message,
+      });
+      return;
+    }
+    newTransaction.id = uuid();
+    if (newTransaction.type === "Income") {
+      user.balance = user.balance + newTransaction.value;
+    }
+    if (newTransaction.type === "Expense") {
+      user.balance = user.balance - newTransaction.value;
+    }
+    user.transactions.push(newTransaction);
+    await user.save();
+    res.status(201).json({
+      status: "Created",
+      code: 201,
+      data: {
+        balance: user.balance,
+        transactions: user.transactions,
+      },
+    });
+    return;
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+const deleteTransaction = async (req, res) => {
+  const user = req.user;
+  const { transactionId } = req.params;
+  if (
+    user.transactions.some(
+      (transaction) => transaction.id === transactionId
+    ) !== true ||
+    user.transactions === []
+  ) {
+    res.status(404).json({
+      status: "Not found",
+      code: 404,
+      message: "Transaction do not exist or wrong Id",
+    });
+    return;
+  }
+  const deletedTransaction = user.transactions.find(
+    (transaction) => transaction.id === transactionId
+  );
+  console.log(deletedTransaction.type);
+  if (deletedTransaction.type === "Income") {
+    console.log("income");
+    user.balance = user.balance - deletedTransaction.value;
+  }
+  if (deletedTransaction.type === "Expense") {
+    console.log("expense");
+    user.balance = user.balance + deletedTransaction.value;
+  }
+  const updatedTransactions = user.transactions.filter(
+    (transaction) => transaction.id !== transactionId
+  );
+  user.transactions = updatedTransactions;
+  await user.save();
+  res.status(200).json({
+    status: "Succes",
+    code: 200,
+    message: "Transaction deleted",
+    data: {
+      balance: user.balance,
+      transactions: user.transactions,
+    },
+  });
+};
 module.exports = {
   register,
   login,
   logout,
   current,
+  addTransaction,
+  deleteTransaction,
 };

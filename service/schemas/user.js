@@ -19,6 +19,14 @@ const user = new Schema(
       type: String,
       default: null,
     },
+    balance: {
+      type: Number,
+      default: 0,
+    },
+    transactions: {
+      type: Array,
+      default: [],
+    },
   },
   { versionKey: false, timestamps: true }
 );
