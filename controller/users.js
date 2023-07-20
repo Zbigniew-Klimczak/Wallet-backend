@@ -5,7 +5,7 @@ const { uuid } = require("uuidv4");
 const {
   userSignupValidationSchema,
   userLoginValidationSchema,
-  transactionAddValidationSchema,
+  transactionValidationSchema,
 } = require("../service/schemas/validation");
 
 require("dotenv").config();
@@ -141,7 +141,7 @@ const addTransaction = async (req, res) => {
   const user = req.user;
   const newTransaction = req.body;
   try {
-    const { error } = await transactionAddValidationSchema.validate(
+    const { error } = await transactionValidationSchema.validate(
       newTransaction
     );
     if (error) {
@@ -178,45 +178,121 @@ const addTransaction = async (req, res) => {
 const deleteTransaction = async (req, res) => {
   const user = req.user;
   const { transactionId } = req.params;
-  if (
-    user.transactions.some(
+  try {
+    if (
+      user.transactions.some(
+        (transaction) => transaction.id === transactionId
+      ) !== true ||
+      user.transactions === []
+    ) {
+      res.status(404).json({
+        status: "Not found",
+        code: 404,
+        message: "Transaction do not exist or wrong Id",
+      });
+      return;
+    }
+    const deletedTransaction = user.transactions.find(
       (transaction) => transaction.id === transactionId
-    ) !== true ||
-    user.transactions === []
-  ) {
-    res.status(404).json({
-      status: "Not found",
-      code: 404,
-      message: "Transaction do not exist or wrong Id",
+    );
+    console.log(deletedTransaction.type);
+    if (deletedTransaction.type === "Income") {
+      console.log("income");
+      user.balance = user.balance - deletedTransaction.value;
+    }
+    if (deletedTransaction.type === "Expense") {
+      console.log("expense");
+      user.balance = user.balance + deletedTransaction.value;
+    }
+    const updatedTransactions = user.transactions.filter(
+      (transaction) => transaction.id !== transactionId
+    );
+    user.transactions = updatedTransactions;
+    await user.save();
+    res.status(200).json({
+      status: "Succes",
+      code: 200,
+      message: "Transaction deleted",
+      data: {
+        balance: user.balance,
+        transactions: user.transactions,
+      },
     });
-    return;
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
-  const deletedTransaction = user.transactions.find(
-    (transaction) => transaction.id === transactionId
-  );
-  console.log(deletedTransaction.type);
-  if (deletedTransaction.type === "Income") {
-    console.log("income");
-    user.balance = user.balance - deletedTransaction.value;
+};
+
+const updateTransaction = async (req, res) => {
+  const user = req.user;
+  const { transactionId } = req.params;
+  const updatedTransaction = req.body;
+  try {
+    if (
+      user.transactions.some(
+        (transaction) => transaction.id === transactionId
+      ) !== true ||
+      user.transactions === []
+    ) {
+      res.status(404).json({
+        status: "Not found",
+        code: 404,
+        message: "Transaction do not exist or wrong Id",
+      });
+      return;
+    }
+    const { error } = await transactionValidationSchema.validate(
+      updatedTransaction
+    );
+    if (error) {
+      res.status(400).json({
+        status: "Bad Request",
+        code: 400,
+        message: error.message,
+      });
+      return;
+    }
+    const transaction = user.transactions.find(
+      (transaction) => transaction.id === transactionId
+    );
+    if (
+      transaction.value !== updatedTransaction.value ||
+      transaction.type !== updatedTransaction.type
+    ) {
+      if (transaction.type === "Income") {
+        console.log("income");
+        user.balance = user.balance - transaction.value;
+      }
+      if (transaction.type === "Expense") {
+        console.log("expense");
+        user.balance = user.balance + transaction.value;
+      }
+      if (updatedTransaction.type === "Income") {
+        user.balance = user.balance + updatedTransaction.value;
+      }
+      if (updatedTransaction.type === "Expense") {
+        user.balance = user.balance - updatedTransaction.value;
+      }
+    }
+    updatedTransaction.id = transactionId;
+    const newTransactions = user.transactions.filter(
+      (transaction) => transaction.id !== transactionId
+    );
+    newTransactions.push(updatedTransaction);
+    user.transactions = newTransactions;
+    await user.save();
+    res.status(201).json({
+      status: "Updated",
+      code: 201,
+      message: "Transaction updated",
+      data: {
+        balance: user.balance,
+        transactions: user.transactions,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
   }
-  if (deletedTransaction.type === "Expense") {
-    console.log("expense");
-    user.balance = user.balance + deletedTransaction.value;
-  }
-  const updatedTransactions = user.transactions.filter(
-    (transaction) => transaction.id !== transactionId
-  );
-  user.transactions = updatedTransactions;
-  await user.save();
-  res.status(200).json({
-    status: "Succes",
-    code: 200,
-    message: "Transaction deleted",
-    data: {
-      balance: user.balance,
-      transactions: user.transactions,
-    },
-  });
 };
 module.exports = {
   register,
@@ -225,4 +301,5 @@ module.exports = {
   current,
   addTransaction,
   deleteTransaction,
+  updateTransaction,
 };

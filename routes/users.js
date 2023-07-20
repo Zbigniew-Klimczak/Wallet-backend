@@ -9,5 +9,6 @@ router.get("/logout", auth, ctrlTask.logout);
 router.get("/current", auth, ctrlTask.current);
 router.post("/transactions", auth, ctrlTask.addTransaction);
 router.delete("/transactions/:transactionId", auth, ctrlTask.deleteTransaction);
+router.patch("/transactions/:transactionId", auth, ctrlTask.updateTransaction);
 
 module.exports = router;
