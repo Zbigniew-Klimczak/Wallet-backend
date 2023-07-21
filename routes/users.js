@@ -249,5 +249,6 @@ router.get("/current", auth, ctrlTask.current);
 router.post("/transactions", auth, ctrlTask.addTransaction);
 router.delete("/transactions/:transactionId", auth, ctrlTask.deleteTransaction);
 router.patch("/transactions/:transactionId", auth, ctrlTask.updateTransaction);
+router.get("/transactions/categories", auth, ctrlTask.getTransactionCategories);
 
 module.exports = router;
