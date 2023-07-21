@@ -205,7 +205,7 @@ const { auth } = require("../controller/auth.js");
  * tags:
  *   name: Users
  *   description: The users managing API
- * /signup:
+ * /users/signup:
  *   post:
  *     summary: Sign up a new user
  *     tags: [Users]
