@@ -71,3 +71,6 @@ only with bearer token
 "date": "12-20-2022", - date in format "MM-DD-YYYY"
 "comment": "test" - not required, string
 }
+
+/transactions/categories GET
+only with bearer token
