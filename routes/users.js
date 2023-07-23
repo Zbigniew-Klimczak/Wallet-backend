@@ -1,11 +1,20 @@
 const express = require("express");
 const router = express.Router();
 const ctrlTask = require("../controller/users.js");
-const { auth } = require("../controller/auth.js");
+const { auth, refreshAuth } = require("../controller/auth.js");
 
 /**
  * @swagger
  * components:
+ *   securitySchemes:
+ *     refreshToken:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *     accessToken:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  *   schemas:
  *     BadRequestResponse:
  *       type: object
@@ -26,6 +35,26 @@ const { auth } = require("../controller/auth.js");
  *           type: string
  *           description: Error message
  *           example: "Missing field: email"
+ *
+ *     NotAuthorised:
+ *       type: object
+ *       required:
+ *         - status
+ *         - code
+ *         - message
+ *       properties:
+ *         status:
+ *           type: string
+ *           example: Not Authorised
+ *           description: Error status
+ *         code:
+ *           type: Number
+ *           example: 401
+ *           description: Error code
+ *         message:
+ *           type: string
+ *           description: Error message
+ *           example: "Not Authorised"
  *
  *     NotFoundResponse:
  *       type: object
@@ -87,6 +116,21 @@ const { auth } = require("../controller/auth.js");
  *           description: Error message
  *           example: "Example() is not a function in this context"
  *
+ *     RefreshTokensData:
+ *       type: object
+ *       required:
+ *         - accessToken
+ *         - refreshToken
+ *       properties:
+ *         accessToken:
+ *           type: string
+ *           description: New access Token for the user
+ *           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+ *         refreshToken:
+ *           type: string
+ *           descripition: New refresh Token for the user
+ *           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+ *
  *     UserLoginData:
  *       type: object
  *       required:
@@ -141,9 +185,13 @@ const { auth } = require("../controller/auth.js");
  *           type: string
  *           description: User's first name, minimum 3 characters long
  *           example: John
- *         token:
+ *         accessToken:
  *           type: string
- *           description: User's authentication token
+ *           description: User's authentication access token
+ *           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+ *         refreshToken:
+ *           type: string
+ *           description: User's authentication refresh token
  *           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
  *         balance:
  *           type: Number
@@ -250,5 +298,37 @@ router.post("/transactions", auth, ctrlTask.addTransaction);
 router.delete("/transactions/:transactionId", auth, ctrlTask.deleteTransaction);
 router.patch("/transactions/:transactionId", auth, ctrlTask.updateTransaction);
 router.get("/transactions/categories", auth, ctrlTask.getTransactionCategories);
-
+/**
+ * @swagger
+ * tags:
+ *   name: Users
+ *   description: The users managing API
+ * /users/tokens:
+ *   post:
+ *     summary: Get a new pair of access and refresh tokens
+ *     tags: [Users]
+ *     responses:
+ *       200:
+ *         description: The created user.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RefreshTokensData'
+ *       401:
+ *         description: Not Authorised
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/NotAuthorised'
+ *       500:
+ *         description: Some server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/InternalServerErrorResponse'
+ *     security:
+ *       - refreshToken: []
+ *
+ */
+router.post("/tokens", refreshAuth, ctrlTask.refreshAuthTokens);
 module.exports = router;
