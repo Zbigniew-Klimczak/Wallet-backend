@@ -3,9 +3,6 @@ const passport = require("passport");
 const authDecor = (refresh = false) => {
   return (req, res, next) => {
     const authHeader = req.header("Authorization");
-    console.log(req.headers);
-    console.log(req.body);
-    console.log(authHeader);
     const token = authHeader && authHeader.split(" ")[1];
     passport.authenticate("jwt", { session: false }, (err, user) => {
       if (!user || err || (refresh ? user.refreshToken !== token : user.accessToken !== token)) {
