@@ -91,14 +91,17 @@ const login = async (req, res) => {
       return;
     }
 
-    const token = jwt.sign({ userId: user._id }, secret, { expiresIn: "2h" });
-    user.token = token;
+    const accessToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "2h" });
+    const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "30d" });
+    user.accessToken = accessToken;
+    user.refreshToken = refreshToken;
     await user.save();
     res.status(200).json({
       status: "OK",
       code: 200,
       data: {
-        token: user.token,
+        accessToken: user.accessToken,
+        refreshToken: user.refreshToken,
         user: {
           email: user.email,
           firstName: user.firstName,
@@ -145,9 +148,7 @@ const addTransaction = async (req, res) => {
   const user = req.user;
   const newTransaction = req.body;
   try {
-    const { error } = await transactionValidationSchema.validate(
-      newTransaction
-    );
+    const { error } = await transactionValidationSchema.validate(newTransaction);
     if (error) {
       res.status(400).json({
         status: "Bad Request",
@@ -184,9 +185,7 @@ const deleteTransaction = async (req, res) => {
   const { transactionId } = req.params;
   try {
     if (
-      user.transactions.some(
-        (transaction) => transaction.id === transactionId
-      ) !== true ||
+      user.transactions.some((transaction) => transaction.id === transactionId) !== true ||
       user.transactions === []
     ) {
       res.status(404).json({
@@ -233,9 +232,7 @@ const updateTransaction = async (req, res) => {
   const updatedTransaction = req.body;
   try {
     if (
-      user.transactions.some(
-        (transaction) => transaction.id === transactionId
-      ) !== true ||
+      user.transactions.some((transaction) => transaction.id === transactionId) !== true ||
       user.transactions === []
     ) {
       res.status(404).json({
@@ -245,9 +242,7 @@ const updateTransaction = async (req, res) => {
       });
       return;
     }
-    const { error } = await transactionValidationSchema.validate(
-      updatedTransaction
-    );
+    const { error } = await transactionValidationSchema.validate(updatedTransaction);
     if (error) {
       res.status(400).json({
         status: "Bad Request",
@@ -256,9 +251,7 @@ const updateTransaction = async (req, res) => {
       });
       return;
     }
-    const transaction = user.transactions.find(
-      (transaction) => transaction.id === transactionId
-    );
+    const transaction = user.transactions.find((transaction) => transaction.id === transactionId);
     if (
       transaction.value !== updatedTransaction.value ||
       transaction.type !== updatedTransaction.type
@@ -396,6 +389,27 @@ const getStatistics = async (req, res) => {
   }
 };
 
+const refreshAuthTokens = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const accessToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "2h" });
+    const refreshToken = jwt.sign({ userId: user._id }, secret, { expiresIn: "30d" });
+    user.accessToken = accessToken;
+    user.refreshToken = refreshToken;
+    await user.save();
+    res.status(200).json({
+      status: "OK",
+      code: 200,
+      data: {
+        accessToken: user.accessToken,
+        refreshToken: user.refreshToken,
+      },
+    });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -404,6 +418,11 @@ module.exports = {
   addTransaction,
   deleteTransaction,
   updateTransaction,
+
   getCategories,
   getStatistics,
+
+
+  refreshAuthTokens,
+
 };
