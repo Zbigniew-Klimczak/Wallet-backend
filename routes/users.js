@@ -297,7 +297,11 @@ router.get("/current", auth, ctrlTask.current);
 router.post("/transactions", auth, ctrlTask.addTransaction);
 router.delete("/transactions/:transactionId", auth, ctrlTask.deleteTransaction);
 router.patch("/transactions/:transactionId", auth, ctrlTask.updateTransaction);
-router.get("/transactions/categories", auth, ctrlTask.getTransactionCategories);
+router.get("/categories", auth, ctrlTask.getCategories);
+router.get("/statistics/:month/:year", auth, ctrlTask.getStatistics);
+
+
+
 /**
  * @swagger
  * tags:
@@ -331,4 +335,5 @@ router.get("/transactions/categories", auth, ctrlTask.getTransactionCategories);
  *
  */
 router.post("/tokens", refreshAuth, ctrlTask.refreshAuthTokens);
+
 module.exports = router;
