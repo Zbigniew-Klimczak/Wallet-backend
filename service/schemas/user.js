@@ -15,7 +15,11 @@ const user = new Schema(
       type: String,
       required: [true, "Name is required"],
     },
-    token: {
+    accessToken: {
+      type: String,
+      default: null,
+    },
+    refreshToken: {
       type: String,
       default: null,
     },
