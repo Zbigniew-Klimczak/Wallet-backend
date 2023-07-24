@@ -72,5 +72,8 @@ only with bearer token
 "comment": "test" - not required, string
 }
 
-/transactions/categories GET
+/categories GET
+only with bearer token
+
+/statistics/{month}/(year) GET
 only with bearer token

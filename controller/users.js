@@ -10,7 +10,6 @@ const {
 } = require("../service/schemas/validation");
 const {
   transactionCategories,
-  transactionTypes,
 } = require("../service/variables/transactionVariables");
 
 require("dotenv").config();
@@ -300,13 +299,97 @@ const updateTransaction = async (req, res) => {
   }
 };
 
-const getTransactionCategories = (req, res) => {
+const getCategories = (req, res) => {
   try {
     res.status(200).json({
       status: "OK",
       code: 200,
       message: "Transactions categories",
-      data: { types: transactionTypes, categories: transactionCategories },
+      data: { categories: transactionCategories },
+    });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+const getStatistics = async (req, res) => {
+  const user = req.user;
+  const reqMonth = req.params.month;
+  const reqYear = req.params.year;
+  try {
+    const reqTransactions = await user.transactions.filter((transaction) => {
+      const month = transaction.date.split("-")[0];
+      const year = transaction.date.split("-")[2];
+      return reqMonth === month && reqYear === year;
+    });
+    let income = 0;
+    let expenses = 0;
+    let mainExpenses = 0;
+    let products = 0;
+    let car = 0;
+    let selfCare = 0;
+    let childCare = 0;
+    let householdProducts = 0;
+    let education = 0;
+    let leisure = 0;
+    let otherExpenses = 0;
+    let entertainment = 0;
+    reqTransactions.forEach((transaction) => {
+      if (transaction.type === "Expense") {
+        expenses += transaction.value;
+      }
+      if (transaction.type === "Income") {
+        income += transaction.value;
+      }
+      if (transaction.category === "Main expenses") {
+        mainExpenses += transaction.value;
+      }
+      if (transaction.category === "Products") {
+        products += transaction.value;
+      }
+      if (transaction.category === "Car") {
+        car += transaction.value;
+      }
+      if (transaction.category === "Self care") {
+        selfCare += transaction.value;
+      }
+      if (transaction.category === "Child care") {
+        childCare += transaction.value;
+      }
+      if (transaction.category === "Household products") {
+        householdProducts += transaction.value;
+      }
+      if (transaction.category === "Education") {
+        education += transaction.value;
+      }
+      if (transaction.category === "Leisure") {
+        leisure += transaction.value;
+      }
+      if (transaction.category === "Other expenses") {
+        otherExpenses += transaction.value;
+      }
+      if (transaction.category === "Entertainment") {
+        entertainment += transaction.value;
+      }
+    });
+    res.status(200).json({
+      status: "OK",
+      code: 200,
+      message: "Transactions statistics",
+      data: {
+        income,
+        expenses,
+        mainExpenses,
+        products,
+        car,
+        selfCare,
+        childCare,
+        householdProducts,
+        education,
+        leisure,
+        otherExpenses,
+        entertainment,
+      },
     });
   } catch (e) {
     res.status(500).json({ message: e.message });
@@ -321,5 +404,6 @@ module.exports = {
   addTransaction,
   deleteTransaction,
   updateTransaction,
-  getTransactionCategories,
+  getCategories,
+  getStatistics,
 };
