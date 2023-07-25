@@ -36,7 +36,7 @@ const { auth, refreshAuth } = require("../controller/auth.js");
  *           description: Error message
  *           example: "Missing field: email"
  *
- *     NotAuthorised:
+ *     NotAuthorisedResponse:
  *       type: object
  *       required:
  *         - status
@@ -116,6 +116,7 @@ const { auth, refreshAuth } = require("../controller/auth.js");
  *           description: Error message
  *           example: "Example() is not a function in this context"
  *
+ *
  *     RefreshTokensData:
  *       type: object
  *       required:
@@ -131,7 +132,7 @@ const { auth, refreshAuth } = require("../controller/auth.js");
  *           descripition: New refresh Token for the user
  *           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
  *
- *     UserLoginData:
+ *     LoginData:
  *       type: object
  *       required:
  *         - email
@@ -146,7 +147,7 @@ const { auth, refreshAuth } = require("../controller/auth.js");
  *           descripition: User's password, minimum 6 characters long
  *           example: Password123$
  *
- *     UserRegistrationData:
+ *     RegistrationData:
  *       type: object
  *       required:
  *         - email
@@ -161,6 +162,21 @@ const { auth, refreshAuth } = require("../controller/auth.js");
  *           type: string
  *           descripition: User's password, minimum 6 characters long
  *           example: Password123$
+ *         firstName:
+ *           type: string
+ *           description: User's first name, minimum 3 characters long
+ *           example: John
+ *
+ *     RegistrationDataResponse:
+ *       type: object
+ *       required:
+ *         - email
+ *         - firstName
+ *       properties:
+ *         email:
+ *           type: string
+ *           description: User's unique and valid e-mail address
+ *           example: JohnDoe@gmail.com
  *         firstName:
  *           type: string
  *           description: User's first name, minimum 3 characters long
@@ -262,14 +278,14 @@ const { auth, refreshAuth } = require("../controller/auth.js");
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/UserRegistrationData'
+ *             $ref: '#/components/schemas/RegistrationData'
  *     responses:
  *       200:
  *         description: The created user.
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UserRegistrationData'
+ *               $ref: '#/components/schemas/RegistrationDataResponse'
  *       400:
  *         description: Bad request, invalid registration data
  *         content:
@@ -300,8 +316,6 @@ router.patch("/transactions/:transactionId", auth, ctrlTask.updateTransaction);
 router.get("/categories", auth, ctrlTask.getCategories);
 router.get("/statistics/:month/:year", auth, ctrlTask.getStatistics);
 
-
-
 /**
  * @swagger
  * tags:
@@ -313,7 +327,7 @@ router.get("/statistics/:month/:year", auth, ctrlTask.getStatistics);
  *     tags: [Users]
  *     responses:
  *       200:
- *         description: The created user.
+ *         description: New tokens
  *         content:
  *           application/json:
  *             schema:
@@ -323,7 +337,7 @@ router.get("/statistics/:month/:year", auth, ctrlTask.getStatistics);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/NotAuthorised'
+ *               $ref: '#/components/schemas/NotAuthorisedResponse'
  *       500:
  *         description: Some server error
  *         content:
