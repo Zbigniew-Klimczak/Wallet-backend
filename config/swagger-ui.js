@@ -15,6 +15,7 @@ const options = {
     },
     servers: [
       {
+        url: "https://wallet-backend-efx6.onrender.com",
         url: "http://localhost:3000",
       },
     ],
