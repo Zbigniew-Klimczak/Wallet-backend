@@ -376,7 +376,7 @@
  *           type: string
  *           format: date
  *           description: The date of the transaction
- *           example: 06-30-2023
+ *           example: 2023-10-23
  *         comment:
  *           type: string
  *           description: Additional comment for the transaction
