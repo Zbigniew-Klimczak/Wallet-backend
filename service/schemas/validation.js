@@ -29,7 +29,7 @@ const transactionValidationSchema = Joi.object({
     )
     .required(),
   value: Joi.number().required(),
-  date: Joi.date().format("MM-DD-YYYY").required(),
+  date: Joi.date().format("YYYY-MM-DD").required(),
   comment: Joi.string(),
 });
 
