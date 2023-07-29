@@ -336,8 +336,8 @@ const getStatistics = async (req, res) => {
   const reqYear = req.params.year;
   try {
     const reqTransactions = await user.transactions.filter((transaction) => {
-      const month = transaction.date.split("-")[0];
-      const year = transaction.date.split("-")[2];
+      const month = transaction.date.split("-")[1];
+      const year = transaction.date.split("-")[0];
       return reqMonth === month && reqYear === year;
     });
     let income = 0;
