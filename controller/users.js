@@ -12,6 +12,12 @@ const {
 require("dotenv").config();
 const secret = process.env.SECRET;
 
+const sortedTransactions = (transactions) => {
+  const sorted = JSON.parse(JSON.stringify(transactions));
+  sorted.sort((trs1, trs2) => new Date(trs2.date) - new Date(trs1.date));
+  return sorted;
+};
+
 const register = async (req, res) => {
   const { email, password, firstName } = req.body;
   try {
@@ -107,7 +113,7 @@ const login = async (req, res) => {
           email: user.email,
           firstName: user.firstName,
           balance: user.balance,
-          transactions: user.transactions,
+          transactions: sortedTransactions(user.transactions),
         },
       },
     });
@@ -140,7 +146,7 @@ const current = async (req, res) => {
       email: user.email,
       firstName: user.firstName,
       balance: user.balance,
-      transactions: user.transactions,
+      transactions: sortedTransactions(user.transactions),
     },
   });
 };
@@ -149,9 +155,7 @@ const addTransaction = async (req, res) => {
   const user = req.user;
   const newTransaction = req.body;
   try {
-    const { error } = await transactionValidationSchema.validate(
-      newTransaction
-    );
+    const { error } = await transactionValidationSchema.validate(newTransaction);
     if (error) {
       res.status(400).json({
         status: "Bad Request",
@@ -174,7 +178,7 @@ const addTransaction = async (req, res) => {
       code: 201,
       data: {
         balance: user.balance,
-        transactions: user.transactions,
+        transactions: sortedTransactions(user.transactions),
       },
     });
     return;
@@ -188,9 +192,7 @@ const deleteTransaction = async (req, res) => {
   const { transactionId } = req.params;
   try {
     if (
-      user.transactions.some(
-        (transaction) => transaction.id === transactionId
-      ) !== true ||
+      user.transactions.some((transaction) => transaction.id === transactionId) !== true ||
       user.transactions === []
     ) {
       res.status(404).json({
@@ -223,7 +225,7 @@ const deleteTransaction = async (req, res) => {
       message: "Transaction deleted",
       data: {
         balance: user.balance,
-        transactions: user.transactions,
+        transactions: sortedTransactions(user.transactions),
       },
     });
   } catch (e) {
@@ -237,9 +239,7 @@ const updateTransaction = async (req, res) => {
   const updatedTransaction = req.body;
   try {
     if (
-      user.transactions.some(
-        (transaction) => transaction.id === transactionId
-      ) !== true ||
+      user.transactions.some((transaction) => transaction.id === transactionId) !== true ||
       user.transactions === []
     ) {
       res.status(404).json({
@@ -249,9 +249,7 @@ const updateTransaction = async (req, res) => {
       });
       return;
     }
-    const { error } = await transactionValidationSchema.validate(
-      updatedTransaction
-    );
+    const { error } = await transactionValidationSchema.validate(updatedTransaction);
     if (error) {
       res.status(400).json({
         status: "Bad Request",
@@ -260,9 +258,7 @@ const updateTransaction = async (req, res) => {
       });
       return;
     }
-    const transaction = user.transactions.find(
-      (transaction) => transaction.id === transactionId
-    );
+    const transaction = user.transactions.find((transaction) => transaction.id === transactionId);
     if (
       transaction.value !== updatedTransaction.value ||
       transaction.type !== updatedTransaction.type
@@ -295,7 +291,7 @@ const updateTransaction = async (req, res) => {
       message: "Transaction updated",
       data: {
         balance: user.balance,
-        transactions: user.transactions,
+        transactions: sortedTransactions(user.transactions),
       },
     });
   } catch (e) {
